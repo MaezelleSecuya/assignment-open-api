@@ -1,61 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { Observable } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class UniversitiesService {
-  constructor(private httpService: HttpService) {}
+  private universities: any[] = []; 
 
-  // Read (GET) - Fetch universities in a specific country
-  getUniversities(country: string): Observable<any> {
-    return this.httpService
-      .get(`http://universities.hipolabs.com/search?country=philippines`)
-      .pipe(
-        map((response) => response.data), // Map the response to get the data
-        catchError((error) => {
-          console.error('Error fetching universities:', error);
-          throw new Error('Error fetching universities');
-        }),
-      );
+  // (GET) 
+  getUniversities(country: string): any[] {
+    return this.universities.filter((university) => university.country === country);
   }
 
-  // Create (POST) - Add a new university (example: to a local database)
-  createUniversity(university: any): Observable<any> {
-    return this.httpService
-      .post('http://universities.hipolabs.com/search?country=philippines')
-      .pipe(
-        map((response) => response.data), // Map the response to get the data
-        catchError((error) => {
-          console.error('Error creating university:', error);
-          throw new Error('Error creating university');
-        }),
-      );
+  // (POST) 
+  createUniversity(university: any): any {
+    this.universities.push(university);
+    return university;
   }
 
-  // Update (PUT) - Update an existing university
-  updateUniversity(id: string, university: any): Observable<any> {
-    return this.httpService
-      .put('http://universities.hipolabs.com/search?country=philippines')
-      .pipe(
-        map((response) => response.data), // Map the response to get the data
-        catchError((error) => {
-          console.error('Error updating university:', error);
-          throw new Error('Error updating university');
-        }),
-      );
+  // (PUT) 
+  updateUniversity(name: string, updatedUniversity: any): any {
+    const index = this.universities.findIndex((univ) => univ.name === name);
+    if (index === -1) {
+      throw new Error('University not found');
+    }
+    this.universities[index] = { ...this.universities[index], ...updatedUniversity };
+    return this.universities[index];
   }
 
-  // Delete (DELETE) - Delete a university
-  deleteUniversity(id: string): Observable<any> {
-    return this.httpService
-      .delete('http://universities.hipolabs.com/search?country=philippines')
-      .pipe(
-        map((response) => response.data), // Map the response to get the data
-        catchError((error) => {
-          console.error('Error deleting university:', error);
-          throw new Error('Error deleting university');
-        }),
-      );
+ // Delete (DELETE) 
+ deleteUniversity(name: string): string {
+    const index = this.universities.findIndex((univ) => univ.name === name);
+    if (index === -1) {
+      throw new NotFoundException(`University with name ${name} not found`);
+    }
+    this.universities.splice(index, 1); 
+    return `University ${name} deleted successfully.`;
   }
 }
